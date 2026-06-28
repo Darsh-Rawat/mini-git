@@ -36,6 +36,19 @@ def handle_hash_object(args) :
     except Exception as e : 
         print(e)  
 
+def handle_cat_file(args) : 
+    try : 
+        sha_hash = args.SHA
+        dir_path = pathlib.Path(f".mgit/objects/{sha_hash[:2]}/{sha_hash[2:]}")
+
+        if dir_path.exists() : 
+            with open(dir_path, "rb") as f :
+                blob_bytes = zlib.decompress(f.read())
+                content_index = blob_bytes.find("\0".encode())
+                print(blob_bytes[content_index+1: ])
+    except Exception as e : 
+        print(e)
+
 # Create Main Parser
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest="mode",required=True)
@@ -48,6 +61,11 @@ init_parser.set_defaults(func=handle_init)
 hash_object_parser = subparsers.add_parser("hash-object", help="Hash a object")
 hash_object_parser.add_argument("string",type=str)
 hash_object_parser.set_defaults(func=handle_hash_object)
+
+# Create cat-file Parser
+cat_file_parser = subparsers.add_parser("cat-file", help="View Content based on SHA.")
+cat_file_parser.add_argument("SHA",type=str)
+cat_file_parser.set_defaults(func=handle_cat_file)
 
 # Parse Args & Call Function
 args = parser.parse_args()
