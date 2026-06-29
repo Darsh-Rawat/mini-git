@@ -6,6 +6,13 @@ import hashlib
 import zlib
 import pathlib
 
+# Color codes
+RED = '\033[31m'
+GREEN = '\033[32m'
+YELLOW = '\033[33m'
+BLUE = '\033[34m'
+RESET = '\033[0m'
+
 def handle_init(args) : 
     try : 
         os.mkdir(".mgit")
@@ -88,7 +95,7 @@ def handle_status(args) :
     print("Untracked Files :")
     for file_name in files_in_working_dir :            
         if file_name not in files_in_index : 
-            print(file_name)
+            print(f"\t{RED} {file_name}")
 
 def handle_commit(args) : 
     print(args.m)
