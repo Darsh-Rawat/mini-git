@@ -13,6 +13,7 @@ YELLOW = '\033[33m'
 BLUE = '\033[34m'
 RESET = '\033[0m'
 
+# init-command Logic
 def handle_init(args) : 
     try : 
         os.mkdir(".mgit")
@@ -25,6 +26,7 @@ def handle_init(args) :
     except FileExistsError as e : 
         print("Already Initialized !")
 
+# hash-object-Command Logic
 def handle_hash_object(args) : 
     try : 
         file_path = pathlib.Path(getattr(args, "path", args))
@@ -51,6 +53,7 @@ def handle_hash_object(args) :
     except Exception as e : 
         print(e)  
 
+# Cat-file-Command Logic
 def handle_cat_file(args) : 
     try : 
         sha_hash = args.SHA
@@ -64,42 +67,70 @@ def handle_cat_file(args) :
     except Exception as e : 
         print(e)
 
-def handle_add(args) : 
-    index_file_path = pathlib.Path(".mgit/index")
+# Add-Command Logic
+def handle_add(args) :  
+    entires = []      
+    for file in args.files :  
+        file_path = pathlib.Path(file) 
+        
+        # Check if the given file is directory 
+        if file_path.is_dir() : 
+            files_in_dir = os.listdir(file_path)
+            if len(files_in_dir) == 0 : break
 
-    if index_file_path.exists() : 
-        with open(".mgit/index", "rb") as f: 
-            values = f.readlines()
-            print(values)
-    else : 
-        with open(".mgit/index", "wb") as f: 
-            for file in args.files : 
-                try : 
-                    hash = handle_hash_object(file)
-                    f.write(f"100644 {hash} 0 {file}\n".encode())
-                except Exception as e : 
-                    print(e)
+            for file in files_in_dir : 
+                hash = handle_hash_object(f"{file_path}/{file}")
+                entires.append(f"100644 {hash} 0 {file_path}/{file}\n".encode())
+        else :
+            try : 
+                hash = handle_hash_object(file)
+                entires.append(f"100644 {hash} 0 {file}\n".encode())
+            except Exception as e : 
+                print(e)
 
+    with open(".mgit/index", "wb") as f : 
+        f.writelines(entires)
+
+# Status-Command Logic
 def handle_status(args) : 
     files_in_working_dir = os.listdir()
     files_in_index = []
+    index_file_path = pathlib.Path(".mgit/index") 
 
-    with open(".mgit/index", "rb") as f: 
-        entries = f.read().split("\n".encode())
-        for entry in entries: 
-            if len(entry) > 2 : 
-                lst = entry.split(" ".encode())
-                file_name = lst[3].decode()
-                files_in_index.append(file_name)
+    # Check if the Index file is created
+    # If not Created just mark all files in working dir as untracked
+    if index_file_path.exists() : 
+        with open(".mgit/index", "rb") as f: 
+            entries = f.read().split("\n".encode())
+            print("Changes to be commited :")
+            for entry in entries: 
+                if len(entry) > 2 : 
+                    lst = entry.split(" ".encode())
+                    file_name = lst[3].decode()
+                    files_in_index.append(file_name)
+                    print(f"\t {GREEN} {file_name}")
 
-    print("Untracked Files :")
-    for file_name in files_in_working_dir :            
-        if file_name not in files_in_index : 
-            print(f"\t{RED} {file_name}")
+        print(f"{RESET}Untracked Files :")
+        for file_name in files_in_working_dir :            
+            if file_name not in files_in_index : 
+                print(f"\t{RED} {file_name}")
+    else : 
+        print("Untracked Files :")
+        for file_name in files_in_working_dir :            
+                print(f"\t{RED} {file_name}")
 
+# Commit-Command Logic
 def handle_commit(args) : 
-    print(args.m)
-
+    with open(".mgit/index", "rb") as f : 
+        index_data = f.read().decode().split("\n")
+        for entry in index_data: 
+            if len(entry) > 2 : 
+                path = pathlib.Path(entry.split(" ")[3])
+                if path.is_file() :     
+                    print('file')
+                elif path.is_dir() : 
+                    print(dir)
+                
 
 # Create Main Parser
 parser = argparse.ArgumentParser()
