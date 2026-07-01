@@ -88,7 +88,7 @@ def handle_add(args) :
             except Exception as e : 
                 print(e)
 
-    with open(".mgit/index", "wb") as f : 
+    with open(".mgit/index", "ab") as f : 
         f.writelines(entires)
 
 # Status-Command Logic
